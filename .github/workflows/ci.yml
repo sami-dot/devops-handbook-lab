@@ -34,3 +34,22 @@ jobs:
         run: |
           docker build -t handbook-app .
           echo "Image built!"
+      # NEW: Run container in background
+      - name: Start container
+        run: |
+          docker run -d -p 8080:3000 --name my-app handbook-app
+          echo "App is running on port 8080"
+
+      # NEW: Wait for app to start
+      - name: Wait for app
+        run: |
+          timeout 30s bash -c 'until curl -s http://localhost:8080 > /dev/null; do sleep 1; done' || echo "App failed to start"
+
+      # NEW: Show live preview
+      - name: Show in Browser
+        run: |
+          echo "OPEN THIS URL IN YOUR BROWSER:"
+          echo "https://$(curl -s https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }} | jq -r '.head_commit.message' | head -c 10 | tr -d '\n').github.dev"
+          echo ""
+          echo "Or click this link in the job log:"
+          echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
